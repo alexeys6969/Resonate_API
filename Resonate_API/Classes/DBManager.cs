@@ -6,6 +6,7 @@ namespace Resonate_API.Classes
     public class DBManager : DbContext
     {
         public DbSet<Employees> Employees {  get; set; }
+        public DbSet<Categories> Categories { get; set; }
         public DBManager() =>
             Database.EnsureCreated();
 
