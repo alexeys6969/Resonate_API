@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Resonate_API.Models;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace Resonate_API.Classes
 {
@@ -13,6 +15,27 @@ namespace Resonate_API.Classes
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseMySql("Server=127.0.0.1;port=3307;uid=root;pwd=;database=resonate", new MySqlServerVersion(new Version(8, 0, 11)));
+        }
+
+        public static string HashPassword(string input)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                // Преобразуем строку в байты
+                byte[] bytes = Encoding.UTF8.GetBytes(input);
+
+                // Вычисляем хэш
+                byte[] hashBytes = sha256.ComputeHash(bytes);
+
+                // Конвертируем байты в строку (hex)
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    builder.Append(hashBytes[i].ToString("x2"));
+                }
+
+                return builder.ToString();
+            }
         }
     }
 }
