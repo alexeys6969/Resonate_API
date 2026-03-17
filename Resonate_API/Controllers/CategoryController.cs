@@ -5,6 +5,7 @@ using Resonate_API.Models;
 namespace Resonate_API.Controllers
 {
     [Route("/category")]
+    [EndpointGroupName("v2")]
     public class CategoryController : Controller
     {
         private DBManager databaseManager;

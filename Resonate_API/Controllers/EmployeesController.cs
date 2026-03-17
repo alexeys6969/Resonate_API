@@ -6,6 +6,7 @@ using Resonate_API.Models;
 namespace Resonate_API.Controllers
 {
     [Route("/employee")]
+    [EndpointGroupName("v1")]
     public class EmployeesController : Controller
     {
         private DBManager databaseManager;
