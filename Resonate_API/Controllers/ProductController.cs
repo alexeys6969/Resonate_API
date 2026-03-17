@@ -89,7 +89,7 @@ namespace Resonate_API.Controllers
             }
             catch (Exception exp)
             {
-                return StatusCode(500, exp.Message);
+                return StatusCode(500, exp.Message);//
             }
         }
 
