@@ -28,6 +28,18 @@ builder.Services.AddSwaggerGen(option =>
         Title = "Продажи",
         Description = "An API for Resonate"
     });
+    option.SwaggerDoc("v5", new OpenApiInfo
+    {
+        Version = "v5",
+        Title = "Поставщики",
+        Description = "An API for Resonate"
+    });
+    option.SwaggerDoc("v6", new OpenApiInfo
+    {
+        Version = "v6",
+        Title = "Поставки",
+        Description = "An API for Resonate"
+    });
     string PathFile = Path.Combine(AppContext.BaseDirectory, "Resonate_API.xml");
     option.IncludeXmlComments(PathFile);
 });
@@ -45,6 +57,8 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v2/swagger.json", "Категории");
     c.SwaggerEndpoint("/swagger/v3/swagger.json", "Товары");
     c.SwaggerEndpoint("/swagger/v4/swagger.json", "Продажи");
+    c.SwaggerEndpoint("/swagger/v5/swagger.json", "Поставщики");
+    c.SwaggerEndpoint("/swagger/v6/swagger.json", "Поставки");
 });
 app.Run();
 

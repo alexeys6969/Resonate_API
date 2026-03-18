@@ -12,6 +12,7 @@ namespace Resonate_API.Classes
         public DbSet<Products> Products { get; set; }
         public DbSet<Sales> Sales { get; set; }
         public DbSet<Sale_Items> Sale_Items { get; set; }
+        public DbSet<Suppliers> Suppliers {  get; set; }
 
         public DBManager() =>
             Database.EnsureCreated();
@@ -25,13 +26,8 @@ namespace Resonate_API.Classes
         {
             using (SHA256 sha256 = SHA256.Create())
             {
-                // Преобразуем строку в байты
                 byte[] bytes = Encoding.UTF8.GetBytes(input);
-
-                // Вычисляем хэш
                 byte[] hashBytes = sha256.ComputeHash(bytes);
-
-                // Конвертируем байты в строку (hex)
                 StringBuilder builder = new StringBuilder();
                 for (int i = 0; i < hashBytes.Length; i++)
                 {
