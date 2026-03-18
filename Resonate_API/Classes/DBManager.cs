@@ -13,6 +13,8 @@ namespace Resonate_API.Classes
         public DbSet<Sales> Sales { get; set; }
         public DbSet<Sale_Items> Sale_Items { get; set; }
         public DbSet<Suppliers> Suppliers {  get; set; }
+        public DbSet<Supplies> Supplies {  get; set; }
+        public DbSet<Supply_Items> Supply_Items {  get; set; }
 
         public DBManager() =>
             Database.EnsureCreated();
