@@ -60,5 +60,7 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v5/swagger.json", "Поставщики");
     c.SwaggerEndpoint("/swagger/v6/swagger.json", "Поставки");
 });
+
+app.UseCors("AllowWpfClient");
 app.Run();
 

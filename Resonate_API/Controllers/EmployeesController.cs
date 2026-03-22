@@ -38,6 +38,35 @@ namespace Resonate_API.Controllers
                 return StatusCode(501, exp.Message);
             }
         }
+        [Route("/GETCurrentEmployee")]
+        [HttpGet]
+        public ActionResult GetCurrentEmployee([FromHeader] string Authorization)
+        {
+            try
+            {
+                string token = Authorization?.Replace("Bearer ", "");
+                if (string.IsNullOrEmpty(token))
+                    return Unauthorized("Токен не предоставлен");
+                int? employeeId = JwtToken.GetUserIdFromToken(token);
+                if (employeeId == null)
+                    return Unauthorized("Недействительный токен");
+                var employee = databaseManager.Employees.Find(employeeId.Value);
+
+                if (employee == null)
+                    return NotFound("Сотрудник не найден");
+                return Ok(new
+                {
+                    employee.Id,
+                    employee.Full_Name,
+                    employee.Login,
+                    employee.Position
+                });
+            }
+            catch (Exception exp)
+            {
+                return StatusCode(500, exp.Message);
+            }
+        }
         [Route("/GETEmployees")]
         [HttpGet]
         public ActionResult GetEmployees()
@@ -88,8 +117,6 @@ namespace Resonate_API.Controllers
         {
             try
             {
-                if (Position != "Администратор" || Position != "Менеджер" || Position != "Кассир")
-                    return StatusCode(500, "Неправильно выбранная должность");
                 var employees = new Employees
                 {
                     Full_Name = Full_Name,
@@ -97,6 +124,7 @@ namespace Resonate_API.Controllers
                     Password = DBManager.HashPassword(Password),
                     Position = Position
                 };
+
                 databaseManager.Add(employees);
                 databaseManager.SaveChanges();
 
@@ -112,7 +140,9 @@ namespace Resonate_API.Controllers
 
         [Route("/PUTEmployee")]
         [HttpPut]
-        public ActionResult PutCategory([FromForm] int id, [FromForm] string Full_Name, [FromForm] string Login, [FromForm] string Password, [FromForm] string Position)
+        public ActionResult PutEmployee([FromForm] int id, [FromForm] string Full_Name,
+                                [FromForm] string Login, [FromForm] string Password,
+                                [FromForm] string Position)
         {
             try
             {
@@ -123,21 +153,27 @@ namespace Resonate_API.Controllers
 
                 employee.Full_Name = Full_Name;
                 employee.Login = Login;
-                employee.Password = DBManager.HashPassword(Password);
-                employee.Position = Position;
-                databaseManager.SaveChanges();
 
+                if (!string.IsNullOrWhiteSpace(Password))
+                {
+                    employee.Password = DBManager.HashPassword(Password);
+                }
+
+                employee.Position = Position;
+
+                databaseManager.SaveChanges();
                 return Ok(new
                 {
-                employee.Full_Name,
-                employee.Login,
-                employee.Password,
-                employee.Position
-            });
+                    id = employee.Id,
+                    Full_Name = employee.Full_Name,
+                    Login = employee.Login,
+                    Position = employee.Position,
+                    Message = "Сотрудник успешно обновлен"
+                });
             }
             catch (Exception exp)
             {
-                return StatusCode(500, exp.Message);
+                return StatusCode(500, new { Error = exp.Message });
             }
         }
 
