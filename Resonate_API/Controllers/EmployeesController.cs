@@ -58,7 +58,6 @@ namespace Resonate_API.Controllers
                 {
                     employee.Id,
                     employee.Full_Name,
-                    employee.Login,
                     employee.Position
                 });
             }
@@ -78,8 +77,6 @@ namespace Resonate_API.Controllers
                     {
                         Id = c.Id,
                         Full_Name = c.Full_Name,
-                        Login = c.Login,
-                        Password = c.Password,
                         Position = c.Position
                     })
                     .ToList();
@@ -98,7 +95,14 @@ namespace Resonate_API.Controllers
         {
             try
             {
-                var employee = databaseManager.Employees.Find(id);
+                var employee = databaseManager.Employees
+                    .Select(c => new
+                    {
+                        Id = c.Id,
+                        Full_Name = c.Full_Name,
+                        Position = c.Position
+                    })
+                    .Where(x => x.Id == id);
 
                 if (employee == null)
                     return NotFound($"Сотрудник {id} не найден");
