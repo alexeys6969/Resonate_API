@@ -22,15 +22,16 @@ namespace Resonate_API.Controllers
             try
             {
                 var products = databaseManager.Products
+                    .OrderBy(p => p.Id)
                     .Select(c => new
                     {
                         Id = c.Id,
-                        Aricle = c.Article,
+                        Article = c.Article,
                         Name = c.Name,
                         Description = c.Description,
                         Category = c.Category,
                         Price = c.Price,
-                        Stock = c.Stock_Quantity
+                        Stock_Quantity = c.Stock_Quantity
                     })
                     .ToList();
 
@@ -79,13 +80,18 @@ namespace Resonate_API.Controllers
                 databaseManager.Add(products);
                 databaseManager.SaveChanges();
 
-                var savedProduct = databaseManager.Products
-                    .Include(p => p.Category)
-                    .FirstOrDefault(p => p.Id == products.Id);
-
                 return CreatedAtAction(nameof(GetProductById),
-                new { id = savedProduct.Id },
-                new { Id = savedProduct.Id, Article = savedProduct.Article, Name = savedProduct.Name, Description = savedProduct.Description, Category = savedProduct.Category?.Name ?? "Без категории", Price = savedProduct.Price, Stock_Quantity = savedProduct.Stock_Quantity });
+                    new { id = products.Id },
+                    new
+                    {
+                        Id = products.Id,
+                        Article = products.Article,
+                        Name = products.Name,
+                        Description = products.Description,
+                        Category_Id = products.Category_Id,
+                        Price = products.Price,
+                        Stock_Quantity = products.Stock_Quantity
+                    });
             }
             catch (Exception exp)
             {

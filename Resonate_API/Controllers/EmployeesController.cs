@@ -68,19 +68,38 @@ namespace Resonate_API.Controllers
         }
         [Route("/GETEmployees")]
         [HttpGet]
-        public ActionResult GetEmployees()
+        public ActionResult GetEmployees(string token)
         {
             try
             {
-                var employees = databaseManager.Employees
-                    .Select(c => new
-                    {
-                        Id = c.Id,
-                        Full_Name = c.Full_Name,
-                        Position = c.Position
-                    })
-                    .ToList();
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                object employees = null;
+                if(currentUser.Position == "Администратор")
+                {
+                    employees = databaseManager.Employees
+                        .Select(c => new
+                        {
+                            Id = c.Id,
+                            Full_Name = c.Full_Name,
+                            Position = c.Position,
+                            Login = c.Login,
+                            Password = c.Password
+                        })
+                        .ToList();
 
+                } else
+                {
+                    employees = databaseManager.Employees
+                        .Select(c => new
+                        {
+                            Id = c.Id,
+                            Full_Name = c.Full_Name,
+                            Position = c.Position
+                        })
+                        .ToList();
+                }
                 return Ok(employees);
             }
             catch (Exception exp)
@@ -91,11 +110,29 @@ namespace Resonate_API.Controllers
 
         [Route("/GETEmployeeById")]
         [HttpGet]
-        public ActionResult GetEmployeeById(int id)
+        public ActionResult GetEmployeeById(int id, string token)
         {
             try
             {
-                var employee = databaseManager.Employees
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                object employee = null;
+                if (currentUser.Position == "Администратор")
+                {
+                    employee = databaseManager.Employees
+                    .Select(c => new
+                    {
+                        Id = c.Id,
+                        Full_Name = c.Full_Name,
+                        Position = c.Position,
+                        Login = c.Login,
+                        Password = c.Password
+                    })
+                    .Where(x => x.Id == id);
+                } else
+                {
+                    employee = databaseManager.Employees
                     .Select(c => new
                     {
                         Id = c.Id,
@@ -103,7 +140,7 @@ namespace Resonate_API.Controllers
                         Position = c.Position
                     })
                     .Where(x => x.Id == id);
-
+                }
                 if (employee == null)
                     return NotFound($"Сотрудник {id} не найден");
 
