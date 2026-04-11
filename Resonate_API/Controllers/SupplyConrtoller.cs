@@ -16,9 +16,24 @@ namespace Resonate_API.Controllers
         {
             databaseManager = new DBManager();
         }
+
+        /// <summary>
+        /// Возвращает список всех поставок с детализацией по товарам и информации о поставщике.
+        /// </summary>
+        /// <returns>Массив объектов поставок, каждый из которых содержит:
+        /// <list type="bullet">
+        /// <item><description>Id — идентификатор поставки</description></item>
+        /// <item><description>Supplier_id, Supplier_Name — данные поставщика</description></item>
+        /// <item><description>Supply_Date, Total_Amount — дата и итоговая сумма</description></item>
+        /// <item><description>Items — массив товаров с количеством и закупочной ценой</description></item>
+        /// <item><description>ItemsCount — общее количество позиций в поставке</description></item>
+        /// </list>
+        /// </returns>
+        /// <response code="200">Список поставок успешно получен.</response>
+        /// <response code="500">Внутренняя ошибка сервера при выполнении запроса.</response>
         [Route("/GETSupplies")]
         [HttpGet]
-        public ActionResult GetSales()
+        public ActionResult GetSupplies()
         {
             try
             {
@@ -53,9 +68,18 @@ namespace Resonate_API.Controllers
                 return StatusCode(500, exp.Message);
             }
         }
+
+        /// <summary>
+        /// Возвращает детальную информацию о конкретной поставке по её идентификатору.
+        /// </summary>
+        /// <param name="id">Уникальный идентификатор поставки в базе данных.</param>
+        /// <returns>Объект поставки с полным составом и данными поставщика.</returns>
+        /// <response code="200">Поставка найдена и возвращена.</response>
+        /// <response code="404">Поставка с указанным ID не существует.</response>
+        /// <response code="500">Внутренняя ошибка сервера при выполнении запроса.</response>
         [Route("/GETSupplyById")]
         [HttpGet]
-        public ActionResult GetSaleById(int id)
+        public ActionResult GetSupplyById(int id)
         {
             try
             {
@@ -90,9 +114,25 @@ namespace Resonate_API.Controllers
                 return StatusCode(500, exp.Message);
             }
         }
+
+        /// <summary>
+        /// Создаёт новую поставку от поставщика с указанием списка товаров.
+        /// Автоматически увеличивает остатки товаров на складе и рассчитывает итоговую сумму.
+        /// </summary>
+        /// <param name="request">Объект запроса, содержащий:
+        /// <list type="bullet">
+        /// <item><description>supplier_id — ID поставщика, осуществляющего поставку</description></item>
+        /// <item><description>items — массив товаров: product_id, quantity, purchase_price (опционально)</description></item>
+        /// </list>
+        /// </param>
+        /// <returns>Созданная поставка с детализацией по товарам и итоговой суммой.</returns>
+        /// <response code="200">Поставка успешно создана и сохранена в базе.</response>
+        /// <response code="400">Ошибка валидации: пустой запрос, неверный supplier_id, отсутствие товаров, некорректное количество.</response>
+        /// <response code="404">Поставщик или товар с указанным ID не найден.</response>
+        /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/POSTSupply")]
         [HttpPost]
-        public ActionResult PostSale([FromBody] CreateSupplyRequest request)
+        public ActionResult PostSupply([FromBody] CreateSupplyRequest request)
         {
             try
             {
@@ -225,6 +265,32 @@ namespace Resonate_API.Controllers
                 });
             }
         }
+
+        /// <summary>
+        /// Обновляет существующую поставку: метаданные и/или состав товаров.
+        /// Поддерживает три операции для каждого товара: <c>add</c>, <c>update</c>, <c>delete</c>.
+        /// Автоматически корректирует остатки на складе и пересчитывает итоговую сумму.
+        /// </summary>
+        /// <param name="id">Идентификатор поставки, которую необходимо обновить.</param>
+        /// <param name="request">Объект запроса, содержащий:
+        /// <list type="bullet">
+        /// <item><description>Supply — опциональные поля для обновления: Supplier_id, Supply_Date</description></item>
+        /// <item><description>Items — массив операций над товарами:
+        ///   <list type="bullet">
+        ///   <item><description>Id — ID позиции в поставке (для update/delete)</description></item>
+        ///   <item><description>Product_id — ID товара</description></item>
+        ///   <item><description>Quantity — новое количество</description></item>
+        ///   <item><description>Purchase_Price — закупочная цена (опционально)</description></item>
+        ///   <item><description>Action — операция: "add", "update", "delete"</description></item>
+        ///   </list>
+        /// </description></item>
+        /// </list>
+        /// </param>
+        /// <returns>Обновлённая поставка с актуальным составом и суммой.</returns>
+        /// <response code="200">Поставка успешно обновлена.</response>
+        /// <response code="400">Ошибка валидации: некорректное количество, неизвестное действие.</response>
+        /// <response code="404">Поставка, поставщик или товар с указанным ID не найден.</response>
+        /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/PUTSupply")]
         [HttpPut]
         public ActionResult PutSupply(int id, [FromBody] UpdateSupplyFullRequest request)
@@ -463,6 +529,15 @@ namespace Resonate_API.Controllers
                 });
             }
         }
+
+        /// <summary>
+        /// Удаляет поставку по идентификатору. Автоматически уменьшает остатки товаров на складе.
+        /// </summary>
+        /// <param name="id">Идентификатор поставки, подлежащей удалению.</param>
+        /// <returns>Объект с подтверждением удаления и статистикой.</returns>
+        /// <response code="200">Поставка успешно удалена, товары убраны со склада.</response>
+        /// <response code="404">Поставка с указанным ID не найдена.</response>
+        /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/DELETESupply")]
         [HttpDelete]
         public ActionResult DeleteSupply(int id)

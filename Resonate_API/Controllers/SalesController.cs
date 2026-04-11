@@ -16,6 +16,20 @@ namespace Resonate_API.Controllers
             databaseManager = new DBManager();
         }
 
+        /// <summary>
+        /// Возвращает список всех продаж с детализацией по товарам и информации о кассире.
+        /// </summary>
+        /// <returns>Массив объектов продаж, каждый из которых содержит:
+        /// <list type="bullet">
+        /// <item><description>Id, Code — идентификатор и код продажи</description></item>
+        /// <item><description>Employee_id, Employee_Name, Employee_Position — данные кассира</description></item>
+        /// <item><description>Sale_Date, Total_Amount — дата и итоговая сумма</description></item>
+        /// <item><description>Items — массив товаров с количеством и ценой на момент продажи</description></item>
+        /// <item><description>ItemsCount — общее количество позиций в чеке</description></item>
+        /// </list>
+        /// </returns>
+        /// <response code="200">Список продаж успешно получен.</response>
+        /// <response code="500">Внутренняя ошибка сервера при выполнении запроса.</response>
         [Route("/GETSales")]
         [HttpGet]
         public ActionResult GetSales()
@@ -55,6 +69,15 @@ namespace Resonate_API.Controllers
                 return StatusCode(500, exp.Message);
             }
         }
+
+        /// <summary>
+        /// Возвращает детальную информацию о конкретной продаже по её идентификатору.
+        /// </summary>
+        /// <param name="id">Уникальный идентификатор продажи в базе данных.</param>
+        /// <returns>Объект продажи с полным составом чека и данными кассира.</returns>
+        /// <response code="200">Продажа найдена и возвращена.</response>
+        /// <response code="404">Продажа с указанным ID не существует.</response>
+        /// <response code="500">Внутренняя ошибка сервера при выполнении запроса.</response>
         [Route("/GETSaleById")]
         [HttpGet]
         public ActionResult GetSaleById(int id)
@@ -94,6 +117,22 @@ namespace Resonate_API.Controllers
                 return StatusCode(500, exp.Message);
             }
         }
+
+        /// <summary>
+        /// Создаёт новую продажу с указанием кассира и списка товаров.
+        /// Автоматически генерирует код продажи, проверяет остатки на складе и списывает товары.
+        /// </summary>
+        /// <param name="request">Объект запроса, содержащий:
+        /// <list type="bullet">
+        /// <item><description>employee_id — ID кассира, оформляющего продажу</description></item>
+        /// <item><description>items — массив товаров: product_id, quantity, price_at_sale (опционально)</description></item>
+        /// </list>
+        /// </param>
+        /// <returns>Созданная продажа с детализацией по товарам и итоговой суммой.</returns>
+        /// <response code="200">Продажа успешно создана и сохранена в базе.</response>
+        /// <response code="400">Ошибка валидации: пустой запрос, неверный employee_id, отсутствие товаров, недостаточный остаток на складе.</response>
+        /// <response code="404">Сотрудник или товар с указанным ID не найден.</response>
+        /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/POSTSale")]
         [HttpPost]
         public ActionResult PostSale([FromBody] CreateSaleRequest request)
@@ -240,6 +279,31 @@ namespace Resonate_API.Controllers
             }
         }
 
+        /// <summary>
+        /// Обновляет существующую продажу: метаданные и/или состав товаров.
+        /// Поддерживает три операции для каждого товара: <c>add</c>, <c>update</c>, <c>delete</c>.
+        /// Автоматически корректирует остатки на складе и пересчитывает итоговую сумму.
+        /// </summary>
+        /// <param name="id">Идентификатор продажи, которую необходимо обновить.</param>
+        /// <param name="request">Объект запроса, содержащий:
+        /// <list type="bullet">
+        /// <item><description>Sale — опциональные поля для обновления: Code, Employee_id, Sale_Date</description></item>
+        /// <item><description>Items — массив операций над товарами:
+        ///   <list type="bullet">
+        ///   <item><description>Id — ID позиции в продаже (для update/delete)</description></item>
+        ///   <item><description>Product_id — ID товара</description></item>
+        ///   <item><description>Quantity — новое количество</description></item>
+        ///   <item><description>Price_At_Sale — цена на момент продажи (опционально)</description></item>
+        ///   <item><description>Action — операция: "add", "update", "delete"</description></item>
+        ///   </list>
+        /// </description></item>
+        /// </list>
+        /// </param>
+        /// <returns>Обновлённая продажа с актуальным составом и суммой.</returns>
+        /// <response code="200">Продажа успешно обновлена.</response>
+        /// <response code="400">Ошибка валидации: недостаточный остаток товара, неверные данные.</response>
+        /// <response code="404">Продажа, сотрудник или товар с указанным ID не найден.</response>
+        /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/PUTSale")]
         [HttpPut]
         public ActionResult PutSale(int id, [FromBody] UpdateSaleFullRequest request)
@@ -467,6 +531,15 @@ namespace Resonate_API.Controllers
                 });
             }
         }
+
+        /// <summary>
+        /// Удаляет продажу по идентификатору. Автоматически возвращает все товары из чека на склад.
+        /// </summary>
+        /// <param name="id">Идентификатор продажи, подлежащей удалению.</param>
+        /// <returns>Объект с подтверждением удаления и статистикой.</returns>
+        /// <response code="200">Продажа успешно удалена, товары возвращены на склад.</response>
+        /// <response code="404">Продажа с указанным ID не найдена.</response>
+        /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/DELETESale")]
         [HttpDelete]
         public ActionResult DeleteSale(int id)
