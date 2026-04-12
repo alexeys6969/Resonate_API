@@ -88,10 +88,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при сохранении данных.</response>
         [Route("/POSTSupplier")]
         [HttpPost]
-        public ActionResult PostCategory([FromForm] string name, [FromForm] string contact)
+        public ActionResult PostSupplier(string token, [FromForm] string name, [FromForm] string contact)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор" || currentUser.Position != "Менеджер")
+                    return StatusCode(403, "Доступ запрещён");
                 var supplier = new Suppliers
                 {
                     Name = name,
@@ -126,10 +131,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при обновлении данных.</response>ч
         [Route("/PUTSupplier")]
         [HttpPut]
-        public ActionResult PutCategory([FromForm] int id, [FromForm] string name, [FromForm] string contact)
+        public ActionResult PutSupplier(string token, [FromForm] int id, [FromForm] string name, [FromForm] string contact)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор" || currentUser.Position != "Менеджер")
+                    return StatusCode(403, "Доступ запрещён");
                 var supplier = databaseManager.Suppliers.Find(id);
 
                 if (supplier == null)
@@ -163,10 +173,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при удалении данных.</response>
         [Route("/DELETESupplier")]
         [HttpDelete]
-        public ActionResult DeleteSupplier([FromForm] int id)
+        public ActionResult DeleteSupplier(string token, [FromForm] int id)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор" || currentUser.Position != "Менеджер")
+                    return StatusCode(403, "Доступ запрещён");
                 var supplier = databaseManager.Suppliers.Find(id);
 
                 if (supplier == null)

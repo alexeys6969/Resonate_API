@@ -33,10 +33,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при выполнении запроса.</response>
         [Route("/GETSupplies")]
         [HttpGet]
-        public ActionResult GetSupplies()
+        public ActionResult GetSupplies(string token)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser == null)
+                    return StatusCode(403, "Доступ запрещён");
                 var salesWithItems = databaseManager.Supplies
                     .GroupJoin(
                     databaseManager.Supply_Items,
@@ -79,10 +84,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при выполнении запроса.</response>
         [Route("/GETSupplyById")]
         [HttpGet]
-        public ActionResult GetSupplyById(int id)
+        public ActionResult GetSupplyById(string token, int id)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser == null)
+                    return StatusCode(403, "Доступ запрещён");
                 var supplyWithItems = databaseManager.Supplies
                     .GroupJoin(
                     databaseManager.Supply_Items,
@@ -132,10 +142,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/POSTSupply")]
         [HttpPost]
-        public ActionResult PostSupply([FromBody] CreateSupplyRequest request)
+        public ActionResult PostSupply(string token, [FromBody] CreateSupplyRequest request)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор" || currentUser.Position != "Менеджер")
+                    return StatusCode(403, "Доступ запрещён");
                 if (request == null)
                 {
                     return BadRequest(new
@@ -293,10 +308,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/PUTSupply")]
         [HttpPut]
-        public ActionResult PutSupply(int id, [FromBody] UpdateSupplyFullRequest request)
+        public ActionResult PutSupply(string token, int id, [FromBody] UpdateSupplyFullRequest request)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор" || currentUser.Position != "Менеджер")
+                    return StatusCode(403, "Доступ запрещён");
                 using (var transaction = databaseManager.Database.BeginTransaction())
                 {
                     try
@@ -540,10 +560,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/DELETESupply")]
         [HttpDelete]
-        public ActionResult DeleteSupply(int id)
+        public ActionResult DeleteSupply(string token, int id)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор" || currentUser.Position != "Менеджер")
+                    return StatusCode(403, "Доступ запрещён");
                 using (var transaction = databaseManager.Database.BeginTransaction())
                 {
                     try

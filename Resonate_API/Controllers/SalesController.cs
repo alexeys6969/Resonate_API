@@ -32,10 +32,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при выполнении запроса.</response>
         [Route("/GETSales")]
         [HttpGet]
-        public ActionResult GetSales()
+        public ActionResult GetSales(string token)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser == null)
+                    return StatusCode(403, "Доступ запрещён");
                 var salesWithItems = databaseManager.Sales
                     .GroupJoin(
                     databaseManager.Sale_Items,
@@ -80,10 +85,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при выполнении запроса.</response>
         [Route("/GETSaleById")]
         [HttpGet]
-        public ActionResult GetSaleById(int id)
+        public ActionResult GetSaleById(string token, int id)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser == null)
+                    return StatusCode(403, "Доступ запрещён");
                 var saleWithItems = databaseManager.Sales
                     .GroupJoin(
                     databaseManager.Sale_Items,
@@ -135,10 +145,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/POSTSale")]
         [HttpPost]
-        public ActionResult PostSale([FromBody] CreateSaleRequest request)
+        public ActionResult PostSale(string token, [FromBody] CreateSaleRequest request)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser == null)
+                    return StatusCode(403, "Доступ запрещён");
                 if (request == null)
                 {
                     return BadRequest(new
@@ -306,10 +321,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/PUTSale")]
         [HttpPut]
-        public ActionResult PutSale(int id, [FromBody] UpdateSaleFullRequest request)
+        public ActionResult PutSale(string token, int id, [FromBody] UpdateSaleFullRequest request)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser == null)
+                    return StatusCode(403, "Доступ запрещён");
                 using (var transaction = databaseManager.Database.BeginTransaction())
                 {
                     try
@@ -542,10 +562,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера или откат транзакции.</response>
         [Route("/DELETESale")]
         [HttpDelete]
-        public ActionResult DeleteSale(int id)
+        public ActionResult DeleteSale(string token, int id)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser == null)
+                    return StatusCode(403, "Доступ запрещён");
                 using (var transaction = databaseManager.Database.BeginTransaction())
                 {
                     try

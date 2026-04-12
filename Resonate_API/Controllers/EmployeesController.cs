@@ -201,24 +201,32 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при сохранении данных.</response>
         [Route("/POSTEmployee")]
         [HttpPost]
-        public ActionResult PostEmployee([FromForm] string Full_Name, [FromForm] string Login, [FromForm] string Password, [FromForm] string Position)
+        public ActionResult PostEmployee(string token, [FromForm] string Full_Name, [FromForm] string Login, [FromForm] string Password, [FromForm] string Position)
         {
             try
             {
-                var employees = new Employees
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if(currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
+                else
                 {
-                    Full_Name = Full_Name,
-                    Login = Login,
-                    Password = DBManager.HashPassword(Password),
-                    Position = Position
-                };
+                    var employees = new Employees
+                    {
+                        Full_Name = Full_Name,
+                        Login = Login,
+                        Password = DBManager.HashPassword(Password),
+                        Position = Position
+                    };
 
-                databaseManager.Add(employees);
-                databaseManager.SaveChanges();
+                    databaseManager.Add(employees);
+                    databaseManager.SaveChanges();
 
-                return CreatedAtAction(nameof(GetEmployeeById),
-                new { id = employees.Id },
-                new { Id = employees.Id, Full_Name = employees.Full_Name, Login = employees.Login, Password = employees.Password, Position = employees.Position });
+                    return CreatedAtAction(nameof(GetEmployeeById),
+                    new { id = employees.Id },
+                    new { Id = employees.Id, Full_Name = employees.Full_Name, Login = employees.Login, Password = employees.Password, Position = employees.Position });
+                }
             }
             catch (Exception exp)
             {
@@ -240,36 +248,41 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при обновлении данных.</response>
         [Route("/PUTEmployee")]
         [HttpPut]
-        public ActionResult PutEmployee([FromForm] int id, [FromForm] string Full_Name,
-                                [FromForm] string Login, [FromForm] string Password,
-                                [FromForm] string Position)
+        public ActionResult PutEmployee(string token, [FromForm] int id, [FromForm] string Full_Name, [FromForm] string Login, [FromForm] string Password, [FromForm] string Position)
         {
             try
             {
-                var employee = databaseManager.Employees.Find(id);
-
-                if (employee == null)
-                    return NotFound($"Сотрудник с ID {id} не найден");
-
-                employee.Full_Name = Full_Name;
-                employee.Login = Login;
-
-                if (!string.IsNullOrWhiteSpace(Password))
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
+                else
                 {
-                    employee.Password = DBManager.HashPassword(Password);
+                    var employee = databaseManager.Employees.Find(id);
+                    if (employee == null)
+                        return NotFound($"Сотрудник с ID {id} не найден");
+                    employee.Full_Name = Full_Name;
+                    employee.Login = Login;
+
+                    if (!string.IsNullOrWhiteSpace(Password))
+                    {
+                        employee.Password = DBManager.HashPassword(Password);
+                    }
+
+                    employee.Position = Position;
+
+                    databaseManager.SaveChanges();
+                    return Ok(new
+                    {
+                        id = employee.Id,
+                        Full_Name = employee.Full_Name,
+                        Login = employee.Login,
+                        Position = employee.Position,
+                        Message = "Сотрудник успешно обновлен"
+                    });
                 }
-
-                employee.Position = Position;
-
-                databaseManager.SaveChanges();
-                return Ok(new
-                {
-                    id = employee.Id,
-                    Full_Name = employee.Full_Name,
-                    Login = employee.Login,
-                    Position = employee.Position,
-                    Message = "Сотрудник успешно обновлен"
-                });
+                    
             }
             catch (Exception exp)
             {
@@ -288,10 +301,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при удалении данных.</response>
         [Route("/DELETEEmployees")]
         [HttpDelete]
-        public ActionResult DeleteEmployees([FromForm] int id)
+        public ActionResult DeleteEmployees(string token, [FromForm] int id)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
                 var employee = databaseManager.Employees.Find(id);
 
                 if (employee == null)

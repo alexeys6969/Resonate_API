@@ -91,10 +91,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при сохранении данных.</response>
         [Route("/POSTProduct")]
         [HttpPost]
-        public ActionResult PostProduct([FromForm] string Article, [FromForm] string Name, [FromForm] string Description, [FromForm] int Category_Id, [FromForm] decimal Price, [FromForm] int Stock_Quantity)
+        public ActionResult PostProduct(string token, [FromForm] string Article, [FromForm] string Name, [FromForm] string Description, [FromForm] int Category_Id, [FromForm] decimal Price, [FromForm] int Stock_Quantity)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
                 var products = new Products
                 {
                     Article = Article,
@@ -142,10 +147,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при обновлении данных.</response>
         [Route("/PUTProduct")]
         [HttpPut]
-        public ActionResult PutProduct([FromForm] int id, [FromForm] string Article, [FromForm] string Name, [FromForm] string Description, [FromForm] int Category_Id, [FromForm] decimal Price, [FromForm] int Stock_Quantity)
+        public ActionResult PutProduct(string token, [FromForm] int id, [FromForm] string Article, [FromForm] string Name, [FromForm] string Description, [FromForm] int Category_Id, [FromForm] decimal Price, [FromForm] int Stock_Quantity)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
                 var product = databaseManager.Products.Include(p => p.Category).FirstOrDefault(p => p.Id == id);
 
                 if (product == null)
@@ -186,10 +196,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при удалении данных.</response>
         [Route("/DELETEProducts")]
         [HttpDelete]
-        public ActionResult DeleteProducts([FromForm] int id)
+        public ActionResult DeleteProducts(string token, [FromForm] int id)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
                 var product = databaseManager.Products.Find(id);
 
                 if (product == null)

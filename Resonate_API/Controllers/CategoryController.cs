@@ -80,10 +80,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при сохранении данных.</response>
         [Route("/POSTCategory")]
         [HttpPost]
-        public ActionResult PostCategory([FromForm] string name, [FromForm] string description)
+        public ActionResult PostCategory(string token, [FromForm] string name, [FromForm] string description)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
                 var category = new Categories
                 {
                     Name = name,
@@ -115,10 +120,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при обновлении данных.</response>
         [Route("/PUTCategory")]
         [HttpPut]
-        public ActionResult PutCategory([FromForm] int id, [FromForm] string name, [FromForm] string description)
+        public ActionResult PutCategory(string token, [FromForm] int id, [FromForm] string name, [FromForm] string description)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
                 var category = databaseManager.Categories.Find(id);
 
                 if (category == null)
@@ -152,10 +162,15 @@ namespace Resonate_API.Controllers
         /// <response code="500">Внутренняя ошибка сервера при удалении данных.</response>
         [Route("/DELETECategory")]
         [HttpDelete]
-        public ActionResult DeleteCategory([FromForm] int id)
+        public ActionResult DeleteCategory(string token, [FromForm] int id)
         {
             try
             {
+                var curUserId = JwtToken.GetUserIdFromToken(token);
+                var currentUser = databaseManager.Employees
+                    .Where(x => x.Id == curUserId).First();
+                if (currentUser.Position != "Администратор")
+                    return StatusCode(403, "Доступ запрещён");
                 var category = databaseManager.Categories.Find(id);
 
                 if (category == null)
