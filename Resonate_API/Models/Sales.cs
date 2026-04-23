@@ -12,6 +12,8 @@ namespace Resonate_API.Models
         [ForeignKey("Employee_id")]
         public virtual Employees Employee { get; set; }
         public DateTime Sale_Date {  get; set; }
-        public decimal Total_Amount {  get; set; }
+        public decimal Total_Amount => Sale_Items?.Sum(i => i.Quantity * i.Price_At_Sale) ?? 0;
+        public virtual ICollection<Sale_Items> Sale_Items { get; set; } = new List<Sale_Items>();
+
     }
 }
